@@ -32,7 +32,13 @@ function main() {
 
     console.log('Part 1...');
 
-    console.log('Sample:', data[0]);
+    line = data[0].toString();
+    console.log('Sample:', line);
+    const re1 = /^(?<min>\d+)-(?<max>\d+) (?<chr>\w): (?<str>\w+)$/;
+    const found = line.match(re1);
+    console.log('Found:', found, found.groups);
+    const re2 = found.groups.chr;
+    console.log(re2);
 
     console.log('');
 
