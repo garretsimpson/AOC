@@ -26,20 +26,39 @@ function main() {
 
     // Parse input file
     console.log('Parsing...');
-    let data = input.toString().split("\n");
+    let data = input.toString().split(/\r?\n/);
     console.log('  length:', data.length);
     console.log('');
 
     console.log('Part 1...');
+    let valid = 0;
+    let invalid = 0;
+    const RE1 = /^(?<min>\d+)-(?<max>\d+) (?<chr>\w): (?<str>\w+)$/;
+    let line = "";
+    for (let i = 0; i < data.length; i++) {
+        line = data[i].toString();
+        const parse = line.match(RE1);
+        if (parse == null) {
+            console.log("Failed to parse line:", line);
+            continue;
+        }
+        const re2 = new RegExp(parse.groups.chr, 'g');
+        const found = parse.groups.str.match(re2);
+        if (found == null
+            || found.length < parse.groups.min || found.length > parse.groups.max) {
+            invalid++;
+            console.log(line, 'INVALID');
+        }
+        else {
+            valid++;
+            console.log(line, 'VALID');
+        }
+    }
 
-    line = data[0].toString();
-    console.log('Sample:', line);
-    const re1 = /^(?<min>\d+)-(?<max>\d+) (?<chr>\w): (?<str>\w+)$/;
-    const found = line.match(re1);
-    console.log('Found:', found, found.groups);
-    const re2 = found.groups.chr;
-    console.log(re2);
-
+    console.log('');
+    console.log('Results:');
+    console.log('  Valid:', valid);
+    console.log('  Invalid:', invalid);
     console.log('');
 
 }
