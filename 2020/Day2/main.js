@@ -33,6 +33,7 @@ function main() {
     console.log('Part 1...');
 
     console.log('Sample:', data[0]);
+    console.log('Testing...');
 
     console.log('');
 
