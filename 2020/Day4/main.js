@@ -26,13 +26,13 @@ function readFile(filename) {
 }
 
 /**
- * Parse records.
+ * Parse items.
  * @param {String} data
- * @return {Array<String>} An Array of records.
+ * @return {Array<String>} An Array of items.
  */
-function parseRecords(data) {
+function parseItems(data) {
     console.log('Parsing...');
-    return data.toString().split(/\r?\n/);
+    return data.toString().trim().split(/(?:\r?\n){2}/);
 }
 
 function main() {
@@ -41,13 +41,48 @@ function main() {
     console.log('');
 
     const input = readFile(INPUT_FILENAME);
-    const records = parseRecords(input);
-    console.log('Number of records:', records.length);
-    console.log('Sample record:', records[0]);
+    const items = parseItems(input);
+    const numItems = items.length;
+    console.log('Number of items:', numItems);
+    console.log('Last item:', items[numItems - 1]);
     console.log('');
 
     console.log('Part 1...');
-    console.log('');
+    // TODO: Use Array map/reduce
+
+    // Parse records
+    let records = [];
+    const RE = /(?<key>\w{3}):(?<value>.+?)(?: |$)/mg;
+    for (const item of items) {
+        let a = [];
+        let o = {};
+        while ((a = RE.exec(item)) != null) {
+            if (a.groups == undefined) {
+                console.error('Unable to parse item:', item)
+                exit();
+            }
+            o[a.groups.key] = a.groups.value;
+        }
+        records.push(o);
+    }
+    console.log('Total records:', records.length)
+
+    // Verify records
+    const REQ_FIELDS = ['byr', 'iyr', 'eyr', 'hgt', 'hcl', 'ecl', 'pid'];
+    let numValid = 0;
+    for (const record of records) {
+        let valid = true;
+        for (const field of REQ_FIELDS) {
+            if (record[field] == undefined) {
+                valid = false;
+                break;
+            }
+        }
+        if (valid) {
+            numValid++;
+        }
+    }
+    console.log('Valid Records:', numValid);
 }
 
 main();
