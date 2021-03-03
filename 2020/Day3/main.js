@@ -36,7 +36,7 @@ function isTree(x, y) {
 /**
  * Count trees.
  *
- * @param {Slope} slope
+ * @param {{dx:Number, dy:Number}} slope
  * @return {Boolean} Returns number of trees encountered.
  */
 function countTrees(slope) {
@@ -94,20 +94,26 @@ function main() {
     console.log('');
 
     console.log('Part 1...');
-    const SLOPE = {dx: 3, dy: 1};
-
+    const SLOPE = { dx: 3, dy: 1 };
     console.log('Result:', SLOPE, countTrees(SLOPE));
     console.log('');
 
     console.log('Part 2...');
-    const SLOPES = [{dx: 3, dy: 1}];
-
-    let result = 0;
-
+    const SLOPES = [
+        { dx: 1, dy: 1 },
+        { dx: 3, dy: 1 }, 
+        { dx: 5, dy: 1 }, 
+        { dx: 7, dy: 1 }, 
+        { dx: 1, dy: 2 }];
+    let result = 1;
     for (let i = 0; i < SLOPES.length; i++) {
+        console.log('test:', i);
         let slope = SLOPES[i];
-        console.log('Result:', slope, countTrees(slope));
+        let num = countTrees(slope);
+        result *= num;
+        //console.log('...', slope, num);
     }
+    console.log('Result:', result);
     console.log('');
 }
 
