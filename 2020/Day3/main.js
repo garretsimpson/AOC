@@ -94,8 +94,9 @@ function main() {
     console.log('');
 
     console.log('Part 1...');
-    const SLOPE = { dx: 3, dy: 1 };
-    console.log('Result:', SLOPE, countTrees(SLOPE));
+    let slope = { dx: 3, dy: 1 };
+    let result = countTrees(slope);
+    console.log(`Result: (${slope.dx}, ${slope.dy}) ${result}`);
     console.log('');
 
     console.log('Part 2...');
@@ -105,13 +106,12 @@ function main() {
         { dx: 5, dy: 1 }, 
         { dx: 7, dy: 1 }, 
         { dx: 1, dy: 2 }];
-    let result = 1;
+    result = 1;
     for (let i = 0; i < SLOPES.length; i++) {
-        console.log('test:', i);
         let slope = SLOPES[i];
         let num = countTrees(slope);
         result *= num;
-        //console.log('...', slope, num);
+        console.log(`  (${slope.dx}, ${slope.dy}) ${num}`);
     }
     console.log('Result:', result);
     console.log('');
