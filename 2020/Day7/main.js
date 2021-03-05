@@ -53,8 +53,8 @@ function parseRecord(item) {
     }
     const name = a.groups.name;
     console.log('Name:', name);
-    let obj = {'name': name, 'has':[]};
-    
+    let obj = { 'name': name, 'has': [] };
+
     const RE2 = /(?<num>\d+) (?<value>.+?) bag/g;
     RE2.lastIndex = RE1.lastIndex;
     while ((a = RE2.exec(item)) != null) {
@@ -65,7 +65,7 @@ function parseRecord(item) {
         let num = a.groups.num;
         let value = a.groups.value;
         console.log('  has:', num, value);
-        obj.has.push(value);
+        obj.has.push({ 'num': parseInt(num), 'value': value });
     }
     return obj;
 }
@@ -80,7 +80,22 @@ function findValue(obj, value) {
     if (obj.has.length == 0) {
         return false;
     }
-    return obj.has.includes(value) || obj.has.map(v => findValue(RECORDS[v], value)).some(x => x);
+    const values = obj.has.map(o => o.value);
+    return values.includes(value)
+        || values.map(v => findValue(RECORDS[v], value)).some(x => x);
+}
+
+/**
+ * Perform a deep count of the items contained in the given object.
+ * @param {Object} obj
+ * @return {Number} Return total number of items.
+ */
+function countItems(obj) {
+    if (obj.has.length == 0) {
+        return 0;
+    }
+    const nums = obj.has.map(o => o.num + o.num * countItems(RECORDS[o.value]));
+    return nums.reduce((a, v) => a + v);
 }
 
 function main() {
@@ -92,16 +107,22 @@ function main() {
     const items = parseItems(input);
     console.log('Total items:', items.length);
     for (item of items) {
-        let rec = parseRecord(item);
+        const rec = parseRecord(item);
         RECORDS[rec.name] = rec;
     }
     console.log('Total records:', Object.keys(RECORDS).length);
     console.log('');
 
-    console.log('Part 1...');
     const MY_BAG = 'shiny gold';
-    const num = Object.values(RECORDS).map(obj => findValue(obj, MY_BAG)).filter(x => x).length;
-    console.log('Number:', num);
+
+    console.log('Part 1...');
+    const num1 = Object.values(RECORDS).map(obj => findValue(obj, MY_BAG)).filter(x => x).length;
+    console.log('Number:', num1);
+    console.log('');
+
+    console.log('Part 2...');
+    const num2 = countItems(RECORDS[MY_BAG]);
+    console.log('Number:', num2);
     console.log('');
 }
 
