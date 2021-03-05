@@ -66,6 +66,11 @@ function main() {
     console.log('');
 
     console.log('Part 2...');
+    for (let i = min; i < max; i++) {
+        if (!ids.includes(i)) {
+            console.log("Found:", i);
+        }
+    }
     console.log('');
 }
 
