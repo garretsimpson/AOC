@@ -7,7 +7,7 @@
 const { readFileSync } = require('fs');
 const { exit } = require('process');
 
-const TITLE = 'Advent of Code 2020 - Day 5';
+const TITLE = 'Advent of Code 2020 - Day 6';
 const INPUT_FILENAME = 'input.txt';
 
 /**
