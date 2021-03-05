@@ -9,6 +9,8 @@ const { exit } = require('process');
 
 const TITLE = 'Advent of Code 2020 - Day 6';
 const INPUT_FILENAME = 'input.txt';
+const EOL = /\r?\n/;
+const BLANK_LINE = /\r?\n{2}/;
 
 /**
  * Read input file.
@@ -32,9 +34,8 @@ function readFile(filename) {
  */
 function parseItems(data) {
     console.log('Parsing...');
-    return data.toString().trim().split(/(?:\r?\n){2}/);
+    return data.toString().trim().split(BLANK_LINE);
 }
-
 
 /**
  * Parse record.
@@ -42,17 +43,27 @@ function parseItems(data) {
  * @return {Object} A record object.
  */
 function parseRecord(item) {
+    const rec = {};
+    const num = item.split(EOL).length;
+    rec.people = num;
+
     const RE = /\w/mg;
     const a = item.match(RE);
     if (a == null) {
         console.error('Unable to parse item:', item)
         exit();
     }
-    let o = {};
+    const o = {};
     for (const key of a) {
-        o[key] = 1;
+        if (o[key] == undefined) {
+            o[key] = 1;
+        }
+        else {
+            o[key]++;
+        }
     }
-    return o;
+    rec.responses = o;
+    return rec;
 }
 
 function main() {
@@ -68,8 +79,13 @@ function main() {
     console.log('');
 
     console.log('Part 1...');
-    const total = records.map(r => Object.keys(r).length).reduce((a, v) => a + v);
-    console.log('Total:', total);
+    const total1 = records.map(rec => Object.keys(rec.responses).length).reduce((a, n) => a + n);
+    console.log('Total:', total1);
+    console.log('');
+
+    console.log('Part 2...');
+    const total2 = records.map(rec => Object.values(rec.responses).filter(n => n == rec.people).length).reduce((a, n) => a + n);
+    console.log('Total:', total2);
     console.log('');
 }
 
