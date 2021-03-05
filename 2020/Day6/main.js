@@ -35,6 +35,26 @@ function parseItems(data) {
     return data.toString().trim().split(/(?:\r?\n){2}/);
 }
 
+
+/**
+ * Parse record.
+ * @param {String} item
+ * @return {Object} A record object.
+ */
+function parseRecord(item) {
+    const RE = /\w/mg;
+    const a = item.match(RE);
+    if (a == null) {
+        console.error('Unable to parse item:', item)
+        exit();
+    }
+    let o = {};
+    for (const key of a) {
+        o[key] = 1;
+    }
+    return o;
+}
+
 function main() {
     console.log(TITLE);
     console.log(Date());
@@ -43,9 +63,13 @@ function main() {
     const input = readFile(INPUT_FILENAME);
     const items = parseItems(input);
     console.log('Total items:', items.length);
+    const records = items.map(parseRecord);
+    console.log('Total records:', records.length);
     console.log('');
 
     console.log('Part 1...');
+    const total = records.map(r => Object.keys(r).length).reduce((a, v) => a + v);
+    console.log('Total:', total);
     console.log('');
 }
 
