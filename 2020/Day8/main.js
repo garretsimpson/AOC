@@ -46,7 +46,36 @@ function runProg(lines) {
     console.log('Total lines:', lines.length);
     let acc = 0;  // accumulator
     let pc = 0;  // program counter
-    return null;
+    let running = true;
+    const seen = new Set();
+    const RE = /^(?<op>\w{3}) (?<arg>\+\d+|\-\d+)/
+
+    while(running) {
+        const line = lines[pc];
+        const a = RE.exec(line);
+        if (a == null || a.groups == undefined) {
+            console.log('Unable to parse line:', line);
+            exit();
+        }
+        const op = a.groups.op;
+        const num = parseInt(a.groups.arg);
+        console.log(pc, op, num);
+
+        if (seen.has(pc)) {
+            return acc;
+        }
+        seen.add(pc);
+
+        switch(op) {
+            case 'acc':
+                acc += num;
+                break;
+            case 'jmp':
+                pc += num;
+                continue;
+        }
+        pc++;
+    }
 }
 
 function main() {
