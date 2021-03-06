@@ -59,12 +59,11 @@ function parseInstruction(item) {
  * 
  * Returns a object containing the current state and flags: acc, pc, loop, oob
  * 
- * @param {Array<Object>} prog
- * @return {Object} State object
+ * @param {Array<Object>} prog The program.
+ * @param {Number} lineNum [optional] If passed, alter the code at this line number.
+ * @return {Object} State object.
  */
-function runProg(prog) {
-    console.log('Program length:', prog.length);
-
+function runProg(prog, lineNum) {
     const state = {
         acc: 0,       // accumulator
         pc: 0,        // program counter
@@ -74,9 +73,21 @@ function runProg(prog) {
     let running = true;
     const seen = new Set();
 
+    if (lineNum != undefined) {
+        if (lineNum < 0 || lineNum >= prog.length) {
+            console.error('Invalid line number:', lineNum);
+            exit();
+        }
+        console.log('Running alternate #%d', lineNum);
+        if (prog[lineNum].op == 'acc') {
+            console.log('No change - skipping.');
+            return null;
+        }
+    }
+
     while (running) {
         if (state.pc == prog.length) {
-            console.log('Program exits normally.');
+            console.log('====> Program exits normally. <====');
             return state;
         }
         if (state.pc < 0 || state.pc > prog.length) {
@@ -92,17 +103,41 @@ function runProg(prog) {
         seen.add(state.pc);
 
         const inst = prog[state.pc];
+        op = inst.op;
+        if (state.pc == lineNum) {
+            // Alternate code - change the operation
+            if (op == 'jmp') op = 'nop';
+            else if (op == 'nop') op = 'jmp';
+        }
         // console.log(state.pc, inst.op, inst.arg);
-        switch (inst.op) {
+        switch (op) {
             case 'acc':
                 state.acc += inst.arg;
                 break;
             case 'jmp':
                 state.pc += inst.arg;
                 continue;
+            case 'nop':
+                break;
+            default:
+                console.error('Unknown program instruction:', inst.op);
+                exit();
         }
         state.pc++;
     }
+}
+
+/**
+ * Run a series of alternate programs.
+ * @param {Array<Object>} prog The original program.
+ * @return {Object} State object.
+ */
+function alterProg(prog) {
+    let state = {};
+    for (let i = 0; i < prog.length; i++) {
+        state = runProg(prog, i);
+    }
+    return state;
 }
 
 function main() {
@@ -114,11 +149,17 @@ function main() {
     const items = parseItems(input);
     console.log('Total items:', items.length);
     const prog = items.map(parseInstruction);
+    console.log('Program length:', prog.length);
     console.log('');
 
     console.log('Part 1...');
-    const state = runProg(prog);
-    console.log("Value:", state.acc);
+    const state1 = runProg(prog);
+    console.log("Value:", state1.acc);
+    console.log('');
+
+    console.log('Part 2...');
+    const state2 = alterProg(prog);
+    console.log("Value:", state2.acc);
     console.log('');
 }
 
