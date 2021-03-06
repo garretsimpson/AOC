@@ -60,10 +60,10 @@ function parseInstruction(item) {
  * Returns a object containing the current state and flags: acc, pc, loop, oob
  * 
  * @param {Array<Object>} prog The program.
- * @param {Number} lineNum [optional] If passed, alter the code at this line number.
+ * @param {Number} altLine [optional] If passed, alter the code at this line number.
  * @return {Object} State object.
  */
-function runProg(prog, lineNum) {
+function runProg(prog, altLine) {
     const state = {
         acc: 0,       // accumulator
         pc: 0,        // program counter
@@ -73,13 +73,13 @@ function runProg(prog, lineNum) {
     let running = true;
     const seen = new Set();
 
-    if (lineNum != undefined) {
-        if (lineNum < 0 || lineNum >= prog.length) {
-            console.error('Invalid line number:', lineNum);
+    if (altLine != undefined) {
+        if (altLine < 0 || altLine >= prog.length) {
+            console.error('Invalid line number:', altLine);
             exit();
         }
-        console.log('Running alternate #%d', lineNum);
-        if (prog[lineNum].op == 'acc') {
+        console.log('Running alternate #%d', altLine);
+        if (prog[altLine].op == 'acc') {
             console.log('No change - skipping.');
             return null;
         }
@@ -104,7 +104,7 @@ function runProg(prog, lineNum) {
 
         const inst = prog[state.pc];
         op = inst.op;
-        if (state.pc == lineNum) {
+        if (state.pc == altLine) {
             // Alternate code - change the operation
             if (op == 'jmp') op = 'nop';
             else if (op == 'nop') op = 'jmp';
@@ -130,14 +130,10 @@ function runProg(prog, lineNum) {
 /**
  * Run a series of alternate programs.
  * @param {Array<Object>} prog The original program.
- * @return {Object} State object.
+ * @return {Array<Object>} Array of state objects.
  */
 function alterProg(prog) {
-    let state = {};
-    for (let i = 0; i < prog.length; i++) {
-        state = runProg(prog, i);
-    }
-    return state;
+    return Object.keys(prog).map(n => runProg(prog, parseInt(n)));
 }
 
 function main() {
@@ -158,8 +154,10 @@ function main() {
     console.log('');
 
     console.log('Part 2...');
-    const state2 = alterProg(prog);
-    console.log("Value:", state2.acc);
+    const results = alterProg(prog);
+    const state2 = results.filter(obj => (obj != null) && (obj.loop == false) && (obj.oob == false));
+    console.log("Total solutions:", state2.length);
+    console.log("Value:", state2[0].acc);
     console.log('');
 }
 
