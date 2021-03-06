@@ -38,43 +38,70 @@ function parseItems(data) {
 }
 
 /**
- * Run the program.  Break when a loop is detected.
- * @param {Array<String>} lines
- * @return {Number} Return the value in the accumultor just before the loop is executed again.
+ * Parse instruction.
+ * @param {String} item
+ * @return {Object} An instruction object.
  */
-function runProg(lines) {
-    console.log('Total lines:', lines.length);
-    let acc = 0;  // accumulator
-    let pc = 0;  // program counter
+function parseInstruction(item) {
+    const RE = /^(?<op>\w{3}) (?<arg>\+\d+|\-\d+)/;
+    const a = RE.exec(item);
+    if (a == null || a.groups == undefined) {
+        console.log('Unable to parse item:', item);
+        exit();
+    }
+    const op = a.groups.op;
+    const arg = parseInt(a.groups.arg);
+    return { 'op': op, 'arg': arg };
+}
+
+/**
+ * Run the program until the program counter goes out of bounds or a loop is detected.
+ * 
+ * Returns a object containing the current state and flags: acc, pc, loop, oob
+ * 
+ * @param {Array<Object>} prog
+ * @return {Object} State object
+ */
+function runProg(prog) {
+    console.log('Program length:', prog.length);
+
+    const state = {
+        acc: 0,       // accumulator
+        pc: 0,        // program counter
+        loop: false,  // loop detected
+        oob: false    // out-of-bounds
+    }
     let running = true;
     const seen = new Set();
-    const RE = /^(?<op>\w{3}) (?<arg>\+\d+|\-\d+)/
 
-    while(running) {
-        const line = lines[pc];
-        const a = RE.exec(line);
-        if (a == null || a.groups == undefined) {
-            console.log('Unable to parse line:', line);
-            exit();
+    while (running) {
+        if (state.pc == prog.length) {
+            console.log('Program exits normally.');
+            return state;
         }
-        const op = a.groups.op;
-        const num = parseInt(a.groups.arg);
-        console.log(pc, op, num);
-
-        if (seen.has(pc)) {
-            return acc;
+        if (state.pc < 0 || state.pc > prog.length) {
+            console.log('Program out-of-bounds.');
+            state.oob = true;
+            return state;
         }
-        seen.add(pc);
+        if (seen.has(state.pc)) {
+            console.log('Program loop detected.');
+            state.loop = true;
+            return state;
+        }
+        seen.add(state.pc);
 
-        switch(op) {
+        const inst = prog[state.pc];
+        // console.log(state.pc, inst.op, inst.arg);
+        switch (inst.op) {
             case 'acc':
-                acc += num;
+                state.acc += inst.arg;
                 break;
             case 'jmp':
-                pc += num;
+                state.pc += inst.arg;
                 continue;
         }
-        pc++;
+        state.pc++;
     }
 }
 
@@ -86,11 +113,12 @@ function main() {
     const input = readFile(INPUT_FILENAME);
     const items = parseItems(input);
     console.log('Total items:', items.length);
+    const prog = items.map(parseInstruction);
     console.log('');
 
     console.log('Part 1...');
-    const num = runProg(items);
-    console.log("Value:", num);
+    const state = runProg(prog);
+    console.log("Value:", state.acc);
     console.log('');
 }
 
