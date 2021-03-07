@@ -51,6 +51,12 @@ function main() {
     console.log('');
 
     console.log('Part 1...');
+    // Insert source (0) and target (last + 3)
+    NUMBERS = [0, ...NUMBERS, NUMBERS[NUMBERS.length - 1] + 3];
+    const deltas = NUMBERS.map((v, i, a) => a[i + 1] - a[i]);
+    const d1 = deltas.filter(v => v == 1).length;
+    const d3 = deltas.filter(v => v == 3).length;
+    console.log("Result:", d1, d3, d1 * d3);
     console.log('');
 }
 
