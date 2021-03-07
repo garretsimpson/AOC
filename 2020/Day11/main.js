@@ -44,26 +44,37 @@ function parseGrid(data) {
 
 /**
  * Display grid.
+ * @param {Array<Array<String>>} grid 2D array
  */
-function displayGrid() {
-    console.log(GRID.map(a => a.join('')).join('\n'));
+function displayGrid(grid) {
+    console.log(grid.map(a => a.join('')).join('\n'));
+}
+
+/**
+ * Copy grid.
+ * @param {Array<Array<String>>} grid 2D array
+ * @return {Array<Array<String>>} 2D array
+ */
+function copyGrid(grid) {
+    return grid.map(a => a.slice());
 }
 
 const NEARBY = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
 
 /**
  * Count adjacent occupied seats.
+ * @param {Array<Array<String>>} grid 2D array
  * @param {Number} row
  * @param {Number} col
  * @return {Number}
  */
-function countFull(row, col) {
+function countFull(grid, row, col) {
     let count = 0;
     for (let pos of NEARBY) {
         let r = row + pos[0];
         let c = col + pos[1];
         if (r < 0 || r >= ROWS || c < 0 || c >= COLS) continue;
-        if (GRID[r][c] == FULL) {
+        if (grid[r][c] == FULL) {
             count++;
         }
     }
@@ -72,8 +83,11 @@ function countFull(row, col) {
 
 /**
  * Run the rules iteratively.  Stops when the grid does not change.
+ * @param {Array<Array<String>>} grid 2D array
+ * @param {Function} func Counting Function
+ * @param {Number} max Maximum number of occupied seats
  */
-function runRules() {
+function runRules(grid, func, max) {
     let running = true;
     let num = 1;
     while (running) {
@@ -83,20 +97,21 @@ function runRules() {
         for (let row = 0; row < ROWS; row++) {
             newGrid[row] = Array(COLS);
             for (let col = 0; col < COLS; col++) {
-                let value = GRID[row][col];
-                if ((value == EMPTY) && (countFull(row, col) == 0)) {
+                let value = grid[row][col];
+                if ((value == EMPTY) && (func(grid, row, col) == 0)) {
                     value = FULL;
                     running = true;
                 }
-                else if ((value == FULL) && (countFull(row, col) >= 4)) {
+                else if ((value == FULL) && (func(grid, row, col) >= max)) {
                     value = EMPTY;
                     running = true;
                 }
                 newGrid[row][col] = value;
             }
         }
-        GRID = newGrid;
-        displayGrid();
+        // Copy to existing array
+        Object.keys(grid).map(key => grid[key] = newGrid[key]);
+        displayGrid(grid);
         num++;
     }
 }
@@ -111,13 +126,21 @@ function main() {
     ROWS = GRID.length;
     COLS = GRID[0].length;
     console.log('Grid size: %dx%d', COLS, ROWS);
-    displayGrid();
+    displayGrid(GRID);
     console.log('');
 
     console.log('Part 1...');
-    runRules();
-    let num = GRID.map(a => a.filter(v => v == FULL).length).reduce((a, v) => a + v);
-    console.log('Number:', num);
+    let grid1 = copyGrid(GRID);
+    runRules(grid1, countFull, 4);
+    let num1 = grid1.map(a => a.filter(v => v == FULL).length).reduce((a, v) => a + v);
+    console.log('Number:', num1);
+    console.log('');
+
+    console.log('Part 2...');
+    let grid2 = copyGrid(GRID);
+    runRules(grid2, countFull, 5);
+    let num2 = grid2.map(a => a.filter(v => v == FULL).length).reduce((a, v) => a + v);
+    console.log('Number:', num2);
     console.log('');
 }
 
