@@ -4,32 +4,25 @@
  * @author: Garret Simpson
  */
 
-const { readFileSync } = require('fs');
-const { exit } = require('process');
-
 const TITLE = 'Advent of Code 2020 - Day 11';
-const INPUT_FILENAME = 'input.txt';
 
 const EOL = /\r?\n/;
-let GRID = [[]];
 let ROWS = 0, COLS = 0;
 const FLOOR = '.';
-const EMPTY = 'L';
+const FREE = 'L';
 const FULL = '#';
+
+let canvas, ctx;
 
 /**
  * Read input file.
- * @param {String} filename
- * @return {String} Return entire contents of the file.
+ * @return {String} Return entire contents of the file as a string.
  */
-function readFile(filename) {
+function readInputFile() {
+    const { readFileSync } = require('fs');
+    const INPUT_FILENAME = 'input.txt';
     console.log('Read input file:', INPUT_FILENAME);
-    try {
-        return readFileSync(INPUT_FILENAME, 'utf8')
-    } catch (err) {
-        console.error(err)
-        exit();
-    }
+    return readFileSync(INPUT_FILENAME, 'utf8').toString();
 }
 
 /**
@@ -39,7 +32,7 @@ function readFile(filename) {
  */
 function parseGrid(data) {
     console.log('Parsing...');
-    return data.toString().trim().split(EOL).map(s => s.split(''));
+    return data.trim().split(EOL).map(s => s.split(''));
 }
 
 /**
@@ -48,6 +41,32 @@ function parseGrid(data) {
  */
 function displayGrid(grid) {
     console.log(grid.map(a => a.join('')).join('\n'));
+
+    if (ctx == undefined) return;
+    const SIZE = 10;
+
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = 'black';
+    for (row = 0; row < ROWS; row++) {
+        for (col = 0; col < COLS; col++) {
+            let value = grid[row][col];
+            let x = SIZE * col;
+            let y = SIZE * row;
+            ctx.beginPath();
+            switch (value) {
+                case FREE:
+                    ctx.rect(x, y, SIZE, SIZE);
+                    ctx.stroke();
+                    break;
+                case FULL:
+                    ctx.arc(x + SIZE / 2, y + SIZE / 2, SIZE / 2, 0, 2 * Math.PI);
+                    ctx.fill();
+                    break;
+            }
+        }
+    }
 }
 
 /**
@@ -97,7 +116,7 @@ function countSeen(grid, row, col) {
             r += dir[0];
             c += dir[1];
             if (r < 0 || r >= ROWS || c < 0 || c >= COLS) break;
-            if (grid[r][c] == EMPTY) break;
+            if (grid[r][c] == FREE) break;
             if (grid[r][c] == FULL) {
                 count++;
                 break;
@@ -124,12 +143,12 @@ function runRules(grid, func, max) {
             newGrid[row] = Array(COLS);
             for (let col = 0; col < COLS; col++) {
                 let value = grid[row][col];
-                if ((value == EMPTY) && (func(grid, row, col) == 0)) {
+                if ((value == FREE) && (func(grid, row, col) == 0)) {
                     value = FULL;
                     running = true;
                 }
                 else if ((value == FULL) && (func(grid, row, col) >= max)) {
-                    value = EMPTY;
+                    value = FREE;
                     running = true;
                 }
                 newGrid[row][col] = value;
@@ -142,18 +161,30 @@ function runRules(grid, func, max) {
     }
 }
 
+function initCanvas() {
+    if (typeof document == 'undefined') return;
+    canvas = document.querySelector('canvas');
+    ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+
 function main() {
     console.log(TITLE);
     console.log(Date());
     console.log('');
 
-    const input = readFile(INPUT_FILENAME);
-    GRID = parseGrid(input);
+    if (typeof INPUT == 'undefined') {
+        INPUT = readInputFile();
+    }
+    const GRID = parseGrid(INPUT);
     ROWS = GRID.length;
     COLS = GRID[0].length;
     console.log('Grid size: %dx%d', COLS, ROWS);
     displayGrid(GRID);
     console.log('');
+
+    initCanvas();
 
     console.log('Part 1...');
     let grid1 = copyGrid(GRID);
