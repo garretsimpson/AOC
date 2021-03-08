@@ -59,7 +59,7 @@ function copyGrid(grid) {
     return grid.map(a => a.slice());
 }
 
-const NEARBY = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
+const OFFSET = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
 
 /**
  * Count adjacent occupied seats.
@@ -68,14 +68,40 @@ const NEARBY = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1
  * @param {Number} col
  * @return {Number}
  */
-function countFull(grid, row, col) {
+function countNear(grid, row, col) {
     let count = 0;
-    for (let pos of NEARBY) {
+    for (let pos of OFFSET) {
         let r = row + pos[0];
         let c = col + pos[1];
         if (r < 0 || r >= ROWS || c < 0 || c >= COLS) continue;
         if (grid[r][c] == FULL) {
             count++;
+        }
+    }
+    return count;
+}
+
+/**
+ * Count seen occupied seats.
+ * @param {Array<Array<String>>} grid 2D array
+ * @param {Number} row
+ * @param {Number} col
+ * @return {Number}
+ */
+function countSeen(grid, row, col) {
+    let count = 0;
+    for (let dir of OFFSET) {
+        let r = row;
+        let c = col;
+        while (true) {
+            r += dir[0];
+            c += dir[1];
+            if (r < 0 || r >= ROWS || c < 0 || c >= COLS) break;
+            if (grid[r][c] == EMPTY) break;
+            if (grid[r][c] == FULL) {
+                count++;
+                break;
+            }
         }
     }
     return count;
@@ -131,14 +157,14 @@ function main() {
 
     console.log('Part 1...');
     let grid1 = copyGrid(GRID);
-    runRules(grid1, countFull, 4);
+    runRules(grid1, countNear, 4);
     let num1 = grid1.map(a => a.filter(v => v == FULL).length).reduce((a, v) => a + v);
     console.log('Number:', num1);
     console.log('');
 
     console.log('Part 2...');
     let grid2 = copyGrid(GRID);
-    runRules(grid2, countFull, 5);
+    runRules(grid2, countSeen, 5);
     let num2 = grid2.map(a => a.filter(v => v == FULL).length).reduce((a, v) => a + v);
     console.log('Number:', num2);
     console.log('');
