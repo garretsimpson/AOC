@@ -43,12 +43,15 @@ function displayGrid(grid) {
     console.log(grid.map(a => a.join('')).join('\n'));
 
     if (ctx == undefined) return;
-    const SIZE = 10;
+    const SIZE = 8;
 
     ctx.fillStyle = 'white';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.fillStyle = 'black';
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'blue';
+
     for (row = 0; row < ROWS; row++) {
         for (col = 0; col < COLS; col++) {
             let value = grid[row][col];
@@ -57,11 +60,11 @@ function displayGrid(grid) {
             ctx.beginPath();
             switch (value) {
                 case FREE:
-                    ctx.rect(x, y, SIZE, SIZE);
+                    ctx.rect(x + 1, y + 1, SIZE - 2, SIZE - 2);
                     ctx.stroke();
                     break;
                 case FULL:
-                    ctx.arc(x + SIZE / 2, y + SIZE / 2, SIZE / 2, 0, 2 * Math.PI);
+                    ctx.arc(x + SIZE / 2, y + SIZE / 2, SIZE / 2 - 2, 0, 2 * Math.PI);
                     ctx.fill();
                     break;
             }
