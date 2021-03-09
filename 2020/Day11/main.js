@@ -5,14 +5,16 @@
  */
 
 const TITLE = 'Advent of Code 2020 - Day 11';
-
 const EOL = /\r?\n/;
+
 let ROWS = 0, COLS = 0;
 const FLOOR = '.';
 const FREE = 'L';
 const FULL = '#';
+let grid = [[]];
 
 let canvas, ctx;
+let running = false;
 
 /**
  * Read input file.
@@ -36,49 +38,60 @@ function parseGrid(data) {
 }
 
 /**
- * Display grid.
+ * Log grid to the console.
  * @param {Array<Array<String>>} grid 2D array
  */
-function displayGrid(grid) {
+function logGrid() {
     console.log(grid.map(a => a.join('')).join('\n'));
+}
 
+/**
+ * Draw grid on the HTML canvas.
+ * @param {Array<Array<String>>} grid 2D array
+ */
+function drawGrid() {
     if (ctx == undefined) return;
-    const SIZE = 8;
 
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const SIZE = 6;
+    const X_OFFSET = 30;
+    const Y_OFFSET = 30;
 
-    ctx.fillStyle = 'black';
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = 'blue';
+    ctx.linewidth = 0;
 
     for (row = 0; row < ROWS; row++) {
         for (col = 0; col < COLS; col++) {
             let value = grid[row][col];
-            let x = SIZE * col;
-            let y = SIZE * row;
-            ctx.beginPath();
-            switch (value) {
-                case FREE:
-                    ctx.rect(x + 1, y + 1, SIZE - 2, SIZE - 2);
-                    ctx.stroke();
-                    break;
-                case FULL:
-                    ctx.arc(x + SIZE / 2, y + SIZE / 2, SIZE / 2 - 2, 0, 2 * Math.PI);
-                    ctx.fill();
-                    break;
+            let x = SIZE * col + X_OFFSET;
+            let y = SIZE * row + Y_OFFSET;
+            if (value == FREE || value == FULL) {
+                ctx.fillStyle = 'lightblue';
+                ctx.beginPath();
+                ctx.rect(x, y, SIZE, SIZE);
+                ctx.fill();
+            }
+            if (value == FULL) {
+                ctx.fillStyle = 'black';
+                ctx.beginPath();
+                ctx.rect(x + 2, y + 2, SIZE - 4, SIZE - 4);
+                ctx.fill();
             }
         }
     }
 }
 
 /**
- * Copy grid.
- * @param {Array<Array<String>>} grid 2D array
- * @return {Array<Array<String>>} 2D array
+ * Step the animation.
+ * @param {Number} frame The frame number.
  */
-function copyGrid(grid) {
-    return grid.map(a => a.slice());
+function step(frame) {
+    console.log(ctx.gridFunc.name, frame);
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    drawGrid();
+    running = updateGrid(ctx.gridFunc, ctx.gridMax);
+    if (running) {
+        requestAnimationFrame(step);
+    }
 }
 
 const OFFSET = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
@@ -90,7 +103,7 @@ const OFFSET = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1
  * @param {Number} col
  * @return {Number}
  */
-function countNear(grid, row, col) {
+function countNear(row, col) {
     let count = 0;
     for (let pos of OFFSET) {
         let r = row + pos[0];
@@ -105,12 +118,11 @@ function countNear(grid, row, col) {
 
 /**
  * Count seen occupied seats.
- * @param {Array<Array<String>>} grid 2D array
  * @param {Number} row
  * @param {Number} col
  * @return {Number}
  */
-function countSeen(grid, row, col) {
+function countSeen(row, col) {
     let count = 0;
     for (let dir of OFFSET) {
         let r = row;
@@ -130,46 +142,68 @@ function countSeen(grid, row, col) {
 }
 
 /**
- * Run the rules iteratively.  Stops when the grid does not change.
- * @param {Array<Array<String>>} grid 2D array
- * @param {Function} func Counting Function
- * @param {Number} max Maximum number of occupied seats
+ * Update the grid.
+ * @param {Function} func Counting Function.
+ * @param {Number} max Maximum number of occupied seats.
+ * @return {Boolean} Return true if there was a change.  Otherwise return false.
  */
-function runRules(grid, func, max) {
-    let running = true;
-    let num = 1;
-    while (running) {
-        console.log('Iteration #%d', num);
-        let newGrid = Array(ROWS);
-        running = false;
-        for (let row = 0; row < ROWS; row++) {
-            newGrid[row] = Array(COLS);
-            for (let col = 0; col < COLS; col++) {
-                let value = grid[row][col];
-                if ((value == FREE) && (func(grid, row, col) == 0)) {
-                    value = FULL;
-                    running = true;
-                }
-                else if ((value == FULL) && (func(grid, row, col) >= max)) {
-                    value = FREE;
-                    running = true;
-                }
-                newGrid[row][col] = value;
+function updateGrid(func, max) {
+    let changed = false;
+    let newGrid = Array(ROWS);
+    for (let row = 0; row < ROWS; row++) {
+        newGrid[row] = Array(COLS);
+        for (let col = 0; col < COLS; col++) {
+            let value = grid[row][col];
+            if ((value == FREE) && (func(row, col) == 0)) {
+                value = FULL;
+                changed = true;
             }
+            else if ((value == FULL) && (func(row, col) >= max)) {
+                value = FREE;
+                changed = true;
+            }
+            newGrid[row][col] = value;
         }
-        // Copy to existing array
-        Object.keys(grid).map(key => grid[key] = newGrid[key]);
-        displayGrid(grid);
-        num++;
     }
+    grid = newGrid;
+    return changed;
 }
 
+/**
+ * If an HTML document exists, then initialize the canvas.  Otherwise do nothing.
+ */
 function initCanvas() {
     if (typeof document == 'undefined') return;
     canvas = document.querySelector('canvas');
     ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+}
+
+/**
+ * Run the rules.
+ * If a canvas context exists, then use animation to draw to the canvas.
+ * @param {Function} func Counting Function.
+ * @param {Number} max Maximum number of occupied seats.
+ */
+function runRules(func, max) {
+    running = true;
+    // let i = 1;
+    // If there is no canvas context, then just loop and write to console log.
+    if (ctx == undefined) {
+        while (running) {
+            // console.log('Iteration #%d', i++);
+            running = updateGrid(func, max);
+            //logGrid();
+        }
+        return;
+    }
+
+    // Otherwise use animation to draw to the canvas
+    ctx.gridFunc = func;
+    ctx.gridMax = max;
+    step();
+    //while (running);
 }
 
 function main() {
@@ -180,26 +214,25 @@ function main() {
     if (typeof INPUT == 'undefined') {
         INPUT = readInputFile();
     }
-    const GRID = parseGrid(INPUT);
-    ROWS = GRID.length;
-    COLS = GRID[0].length;
+    grid = parseGrid(INPUT);
+    ROWS = grid.length;
+    COLS = grid[0].length;
     console.log('Grid size: %dx%d', COLS, ROWS);
-    displayGrid(GRID);
+    logGrid();
     console.log('');
 
     initCanvas();
 
     console.log('Part 1...');
-    let grid1 = copyGrid(GRID);
-    runRules(grid1, countNear, 4);
-    let num1 = grid1.map(a => a.filter(v => v == FULL).length).reduce((a, v) => a + v);
+    runRules(countNear, 4);
+    let num1 = grid.map(a => a.filter(v => v == FULL).length).reduce((a, v) => a + v);
     console.log('Number:', num1);
     console.log('');
 
     console.log('Part 2...');
-    let grid2 = copyGrid(GRID);
-    runRules(grid2, countSeen, 5);
-    let num2 = grid2.map(a => a.filter(v => v == FULL).length).reduce((a, v) => a + v);
+    grid = parseGrid(INPUT);
+    runRules(countSeen, 5);
+    let num2 = grid.map(a => a.filter(v => v == FULL).length).reduce((a, v) => a + v);
     console.log('Number:', num2);
     console.log('');
 }
