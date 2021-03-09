@@ -13,9 +13,6 @@ const FREE = 'L';
 const FULL = '#';
 let grid = [[]];
 
-let canvas, ctx;
-let running = false;
-
 /**
  * Read input file.
  * @return {String} Return entire contents of the file as a string.
@@ -45,12 +42,27 @@ function logGrid() {
     console.log(grid.map(a => a.join('')).join('\n'));
 }
 
+let canvas, ctx;
+
 /**
- * Draw grid on the HTML canvas.
+ * If an HTML document exists, then initialize the canvas.  Otherwise do nothing.
+ */
+function initCanvas() {
+    if (typeof document == 'undefined')
+        return;
+    canvas = document.querySelector('canvas');
+    ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+
+/**
+ * Draw grid on the canvas.
  * @param {Array<Array<String>>} grid 2D array
  */
 function drawGrid() {
-    if (ctx == undefined) return;
+    if (ctx == undefined)
+        return;
 
     const SIZE = 6;
     const X_OFFSET = 30;
@@ -76,21 +88,6 @@ function drawGrid() {
                 ctx.fill();
             }
         }
-    }
-}
-
-/**
- * Step the animation.
- * @param {Number} frame The frame number.
- */
-function step(frame) {
-    console.log(ctx.gridFunc.name, frame);
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    drawGrid();
-    running = updateGrid(ctx.gridFunc, ctx.gridMax);
-    if (running) {
-        requestAnimationFrame(step);
     }
 }
 
@@ -170,43 +167,44 @@ function updateGrid(func, max) {
 }
 
 /**
- * If an HTML document exists, then initialize the canvas.  Otherwise do nothing.
- */
-function initCanvas() {
-    if (typeof document == 'undefined') return;
-    canvas = document.querySelector('canvas');
-    ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-
-/**
  * Run the rules.
  * If a canvas context exists, then use animation to draw to the canvas.
  * @param {Function} func Counting Function.
  * @param {Number} max Maximum number of occupied seats.
  */
 function runRules(func, max) {
-    running = true;
-    // let i = 1;
-    // If there is no canvas context, then just loop and write to console log.
-    if (ctx == undefined) {
-        while (running) {
-            // console.log('Iteration #%d', i++);
-            running = updateGrid(func, max);
-            //logGrid();
+    return new Promise((resolve, reject) => {
+        function step(ts) {
+            console.log(ctx.gridFunc.name, ts);
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            drawGrid();
+            if (updateGrid(ctx.gridFunc, ctx.gridMax)) {
+                requestAnimationFrame(step);
+            }
+            else {
+                resolve();
+            }
         }
-        return;
-    }
-
-    // Otherwise use animation to draw to the canvas
-    ctx.gridFunc = func;
-    ctx.gridMax = max;
-    step();
-    //while (running);
+        // If there is no canvas context, then just loop and write to console log.
+        // let i = 1;
+        if (ctx == undefined) {
+            while (updateGrid(func, max)) {
+                // console.log('Iteration #%d', i++);
+                // logGrid();
+            }
+            resolve();
+        }
+        else {
+            // Otherwise use animation to draw to the canvas
+            ctx.gridFunc = func;
+            ctx.gridMax = max;
+            requestAnimationFrame(step);
+        }
+    })
 }
 
-function main() {
+async function main() {
     console.log(TITLE);
     console.log(Date());
     console.log('');
@@ -224,14 +222,14 @@ function main() {
     initCanvas();
 
     console.log('Part 1...');
-    runRules(countNear, 4);
+    await runRules(countNear, 4);
     let num1 = grid.map(a => a.filter(v => v == FULL).length).reduce((a, v) => a + v);
     console.log('Number:', num1);
     console.log('');
 
     console.log('Part 2...');
     grid = parseGrid(INPUT);
-    runRules(countSeen, 5);
+    await runRules(countSeen, 5);
     let num2 = grid.map(a => a.filter(v => v == FULL).length).reduce((a, v) => a + v);
     console.log('Number:', num2);
     console.log('');
