@@ -105,7 +105,8 @@ function countNear(row, col) {
     for (let pos of OFFSET) {
         let r = row + pos[0];
         let c = col + pos[1];
-        if (r < 0 || r >= ROWS || c < 0 || c >= COLS) continue;
+        if (r < 0 || r >= ROWS || c < 0 || c >= COLS)
+            continue;
         if (grid[r][c] == FULL) {
             count++;
         }
@@ -127,8 +128,10 @@ function countSeen(row, col) {
         while (true) {
             r += dir[0];
             c += dir[1];
-            if (r < 0 || r >= ROWS || c < 0 || c >= COLS) break;
-            if (grid[r][c] == FREE) break;
+            if (r < 0 || r >= ROWS || c < 0 || c >= COLS)
+                break;
+            if (grid[r][c] == FREE)
+                break;
             if (grid[r][c] == FULL) {
                 count++;
                 break;
@@ -174,18 +177,7 @@ function updateGrid(func, max) {
  */
 function runRules(func, max) {
     return new Promise((resolve, reject) => {
-        function step(ts) {
-            console.log(ctx.gridFunc.name, ts);
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            drawGrid();
-            if (updateGrid(ctx.gridFunc, ctx.gridMax)) {
-                requestAnimationFrame(step);
-            }
-            else {
-                resolve();
-            }
-        }
+        let id;
         // If there is no canvas context, then just loop and write to console log.
         // let i = 1;
         if (ctx == undefined) {
@@ -197,9 +189,19 @@ function runRules(func, max) {
         }
         else {
             // Otherwise use animation to draw to the canvas
-            ctx.gridFunc = func;
-            ctx.gridMax = max;
-            requestAnimationFrame(step);
+            id = requestAnimationFrame(step);
+        }
+        function step(ts) {
+            console.log(func.name, id, ts);
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            drawGrid();
+            if (updateGrid(func, max)) {
+                id = requestAnimationFrame(step);
+            }
+            else {
+                resolve();
+            }
         }
     })
 }
