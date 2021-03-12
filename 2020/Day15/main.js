@@ -27,6 +27,17 @@ function main() {
     }
     console.log('Result:', log[0]);
     console.log('');
+
+    console.log('Part 2...');
+    while (log.length < 30000000) {
+        if (log.length % 100000 == 0)
+            console.log(log.length);
+        let pos = log.indexOf(log[0], 1);  // previously seen position
+        let val = (pos == -1) ? 0 : pos;
+        log.unshift(val);
+    }
+    console.log('Result:', log[0]);
+    console.log('');
 }
 
 main();
