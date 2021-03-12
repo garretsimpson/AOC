@@ -61,15 +61,47 @@ function readFile(filename) {
 }
 
 /**
- * Run the program
+ * Run the program - Part 1
  * @param {Array<Object>} lines
  */
-function runProg(lines) {
+ function runProg1(lines) {
     for (line of lines) {
         const ONE = BigInt('0b' + line.mask.replace(/X/g, '0'));
         const ZERO = BigInt('0b' + line.mask.replace(/X/g, '1'));
         const value = BigInt(line.value);
         MEM[line.index] = (value & ZERO) | ONE;
+    }
+}
+
+/**
+ * Run the program - Part 2
+ * @param {Array<Object>} lines
+ */
+ function runProg2(lines) {
+    for (line of lines) {
+        // Compute the key using mask and address.
+        let mask = line.mask;
+        let addr = line.index.toString(2).padStart(mask.length, '0');
+        console.log('Mask:', mask);
+        console.log('Addr:', addr);
+        let key = '';
+        for (let i = 0; i < mask.length; i++) {
+            key += (mask[i] == '0') ? addr[i] : mask[i];
+        }
+        console.log('Key: ', key);
+
+        // Compute all possible addresses using the key.
+        let num = key.match(/X/g).length;  // number of 'X'
+        for (let i = 0; i < 2**num; i++) {
+            let val = i.toString(2).padStart(num, '0');  // binary string
+            // console.log('Val: ', val);
+            addr = key;
+            for (let j = 0; j < num; j++) {
+                addr = addr.replace(/X/, val[j]);
+            }
+            // console.log('Addr:', addr);
+            MEM.set(addr, line.value);
+        }
     }
 }
 
@@ -87,10 +119,18 @@ function main() {
 
     console.log('Part 1...');
     MEM = [];
-    runProg(lines);
-    let sum = 0n;
-    MEM.forEach(val => sum += val);
-    console.log('Result:', sum);
+    runProg1(lines);
+    let sum1 = 0n;
+    MEM.forEach(val => sum1 += val);
+    console.log('Result:', sum1.toString());
+    console.log('');
+
+    console.log('Part 2...');
+    MEM = new Map();
+    runProg2(lines);
+    let sum2 = 0;
+    MEM.forEach(val => sum2 += val);
+    console.log('Result:', sum2.toString());
     console.log('');
 }
 
