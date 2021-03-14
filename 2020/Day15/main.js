@@ -30,25 +30,18 @@ function main() {
 
     console.log('Part 2...');
     log = new Map();
-    values.forEach(val => log.set(val, null));
+    values.forEach((val, idx) => log.set(val, {prev: null, last: idx}));
     let count = values.length;
     let last = values[values.length - 1];
-//    while (count < 30000000) {
-    while (count < 2020) {
-        if (log.length % 100000 == 0)
-            console.log(log.length);
-        let pos = log.get(last);  // previously seen position
-        let val = 0;
-        if (pos == null) {
-            log.set(0, null);
-        }
-        else {
-            last = val = count - pos;
-            log.set(last, count);
-            log.set(val, val);
-        }
+    while (count < 30000000) {  // 30000000
+        let obj = log.get(last);
+        last = (obj.prev == null) ? 0 : (obj.last - obj.prev);
+        obj = log.get(last);
+        let prev = (obj == undefined) ? null : obj.last;
+        log.set(last, {prev: prev, last: count})
+        count++;
     }
-    console.log('Result:', log[0]);
+    console.log('Result:', last);
     console.log('');
 }
 
