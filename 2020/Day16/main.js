@@ -7,7 +7,7 @@
 const TITLE = 'Advent of Code 2020 - Day 16';
 const INPUT_FILENAME = 'input.txt';
 
-const BLANK = /\r?\n{2}/;
+const BLANK = /(?:\r?\n){2}/;
 const EOL = /\r?\n/;
 
 /**
@@ -49,9 +49,7 @@ function parseField(item) {
     for (range of [a.groups.r1, a.groups.r2]) {
         result.push(range.match(/\d+/g).map(v => parseInt(v)));
     }
-    const obj = {};
-    obj[a.groups.name] = result;
-    return obj;
+    return {name: a.groups.name, values: result};
 }
 
 /**
@@ -79,6 +77,23 @@ function main() {
     console.log('');
 
     console.log('Part 1...');
+    const RANGE = new Set();
+    for (let field of fields) {
+        for (let value of field.values) {
+            for (let i = value[0]; i <= value[1]; i++) {
+                RANGE.add(i);
+            }
+        }
+    }
+    let result1 = 0;
+    for (ticket of tickets) {
+        for (let value of ticket) {
+            if (!RANGE.has(value)) {
+                result1 += value;
+            }
+        }
+    }
+    console.log('Result:', result1);
     console.log('');
 }
 
